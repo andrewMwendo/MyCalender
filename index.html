@@ -1,0 +1,259 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0c1d3a;
+            color: rgba(255, 234, 234, 0.9);
+            font-family: "Poppins", sans-serif;
+            max-width: 768px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        #calendar {
+            width: 100%;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid white;
+            background-color: rgba(255, 255, 255, 0.091);
+            text-align: center;
+            /* vertical-align:middle; */
+        }
+
+        .day {
+            cursor: pointer;
+            display: inline-block;
+            width: 10vw;
+            border-radius: 100px;
+            min-height: 100px;
+            /* height: 15vw; */
+            /* height: 150px;
+            width: 150px; */
+            /* text-align: center; */
+            /* margin: 0;*/
+            /* position: absolute;
+            top: 50%; */
+            /* -ms-transform: translateY(-50%);
+            transform: translateY(-50%); */
+            
+            /* border: 1px solid white; */
+            /* display: flex; */
+            /* vertical-align:middle; */
+            /* justify-content: center; */
+            /* flex-direction: column; */
+            
+        }
+        
+        .sunday {
+            background-color: rgb(160, 69, 69);
+        }
+
+        .selected {
+            border: 1px solid white;
+        }
+
+        #newMeeting {
+            display: flex;
+            justify-content: space-between;
+            align-content: center;
+        }
+
+        #newMeeting div {
+            text-align: center;
+        }
+
+        #currentMeetings>div {
+            text-align: center;
+        }
+
+        input {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.208);
+            border: 0;
+            border-radius: 20px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        ::placeholder {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>calendar</h1>
+    <div id="calendar">
+
+    </div>
+
+    <h1>current meetings</h1>
+    <div id="currentMeetings">
+        <div>
+            No meetings yet for selected day.
+        </div>
+    </div>
+
+    <h1>add meeting</h1>
+    <div id="newMeeting">
+        <div>
+            <h4>day</h4>
+            <h4 id="newMeetingDay">Click on a day</h4>
+        </div>
+        <div>
+            <h4>meeting time</h4>
+            <input type="time" id="newMeetingTime">
+        </div>
+        <div>
+            <h4>meeting name</h4>
+            <input type="text" id="newMeetingName" placeholder="Insert new meeting name"">
+    </div>
+    <div>
+        <h4>add</h4>
+        <input type=" button" value="save meeting" style="cursor: pointer;" onclick="addMeeting()">
+        </div>
+    </div>
+    <script>
+        var numOfDays = daysInMonth()
+        var calendar = document.querySelector("#calendar")
+        var weekDays = getWeekDays(getLang());
+        var appointments = []
+        var selectedDay = NaN
+
+        window.onload = function () {
+
+            let lastDay = getLastDayName()
+
+            for (let i = 1; i <= numOfDays; i++) {
+                let child = document.createElement("div")
+                child.className = "day"
+
+                child.onclick = clicking
+                let dayName = document.createElement("a")
+                dayName.style.fontWeight = 400
+
+                let dayNumber = document.createElement("span")
+                dayNumber.style.fontWeight = 400
+
+                dayName.innerHTML = weekDays[(i + lastDay) % 7] + "<br>"
+                dayNumber.innerHTML = i
+
+                child.classList += dayName.innerText == weekDays[weekDays.length - 1] ? " sunday" : ""
+
+                child.appendChild(dayName)
+                child.appendChild(dayNumber)
+                calendar.appendChild(child)
+
+                appointments.push([])
+            }
+        }
+
+        function daysInMonth() {
+            let now = new Date()
+            return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+        }
+
+        function getLastDayName() {
+            let now = new Date()
+            return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDay()
+        }
+
+        function getWeekDays(locale) {
+            var baseDate = new Date(Date.UTC(2020, 3, 20)) //Monday
+            var weekDays = []
+            for (let i = 0; i < 7; i++) {
+                weekDays.push(
+                    baseDate.toLocaleDateString(locale, { weekday: 'long' }).toLowerCase()
+                )
+                baseDate.setDate(baseDate.getDate() + 1)
+            }
+            return weekDays;
+        }
+
+        function getLang() {
+            if (navigator.languages != undefined)
+                return navigator.languages[0];
+            else
+                return navigator.language;
+        }
+
+        function clicking(event) {
+            let selected = document.querySelector(".selected")
+            if (selected) {
+                selected.className = selected.className.replace(" selected", "")
+            }
+
+            if (event.target.tagName.toLowerCase() != "div") {
+                event.target.parentNode.className += " selected"
+            } else {
+                event.target.className += " selected"
+            }
+
+            updateSelection()
+            showMeetings()
+        }
+
+        function updateSelection() {
+            selectedDay = document.querySelector(".selected span").innerText
+            let newMeetingDay = document.querySelector("#newMeetingDay")
+
+            newMeetingDay.innerText = selectedDay
+        }
+
+        function showMeetings() {
+            console.log(appointments[selectedDay - 1])
+            let meetings = document.querySelector("#currentMeetings")
+
+            meetings.innerHTML = ""
+            if (appointments[selectedDay - 1] != []) {
+                let meeting = document.createElement("div")
+
+                for (let appointment of appointments[selectedDay - 1]) {
+                    meeting.innerHTML += "<div>time: " + appointment[0] + "<br>name: " + appointment[1] + "</div>"
+                }
+
+                meetings.appendChild(meeting)
+
+            } else {
+                meetings.innerHTML = "No meetings."
+            }
+        }
+
+
+        function addMeeting() {
+            if (Number.isNaN(selectedDay)) {
+                alert("You didn't select any day yet")
+            } else {
+                console.log("adding meeting")
+                let time = document.querySelector("#newMeetingTime")
+                let name = document.querySelector("#newMeetingName")
+                let day = parseInt(document.querySelector("#newMeetingDay").innerText)
+
+                if (!(time.value)) {
+                    alert("You didn't set the time")
+                    return
+                }
+
+                if (!(name.value)) {
+                    alert("Please insert a name for your memo")
+                    return
+                }
+
+                appointments[day - 1].push(
+                    [time.value, name.value]
+                )
+                console.log(appointments)
+                time.value = ""
+                name.value = ""
+                showMeetings()
+            }
+        }
+
+    </script>
+</body>
+
+</html>
